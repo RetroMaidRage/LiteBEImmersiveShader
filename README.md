@@ -31,6 +31,4 @@ LiteBEImmersiveShader - this project focused on immpresive optimization
 - composite2 - sky
 - composite7 - tech fog
 ### Credits
-by RetroMaidRage
-some effect from shadertoy or other shaders
--if my shader have code from your shader, and you don't like this, tell me =)
+- by RetroMaidRage
