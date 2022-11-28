@@ -5,7 +5,7 @@
 #include "/files/filters/dither.glsl"
 #include "/files/filters/noises.glsl"
 #include "/files/shading/lightmap.glsl"
-
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 varying vec2 TexCoords;
 
 // Direction of the sun (not normalized!)
@@ -28,9 +28,9 @@ uniform mat4 gbufferProjectionInverse;
 uniform mat4 gbufferModelViewInverse;
 uniform mat4 shadowModelView;
 uniform mat4 shadowProjection;
-
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 const float sunPathRotation = -40.0f;
-const int noiseTextureResolution = 2;
+const int noiseTextureResolution = 128;
 const float shadowDistance = 60.0f;
 
 const float Ambient = 0.025f;
@@ -38,9 +38,9 @@ const float Ambient = 0.025f;
 #define ShadowRendering
 #define ShadowLightmap
 
-#define shadowMapResolution 128
+#define shadowMapResolution 256
 #define SHADOW_SAMPLES 1
-
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /*
 const int colortex0Format = RGBA16F;
 const int colortex1Format = RGB16;
@@ -50,7 +50,7 @@ const int colortex8Format = RGBA32F;
 const int colortex7Format = RGBA32F;
 */
 
-
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 float timefract = worldTime;
 float TimeSunrise  = ((clamp(timefract, 23000.0, 24000.0) - 23000.0) / 1000.0) + (1.0 - (clamp(timefract, 0.0, 4000.0)/4000.0));
 float TimeNoon     = ((clamp(timefract, 0.0, 4000.0)) / 4000.0) - ((clamp(timefract, 8000.0, 12000.0) - 8000.0) / 4000.0);
@@ -61,7 +61,7 @@ bool sunrise =   (worldTime < 22000 || worldTime > 500);
 bool day =   (worldTime < 1000 || worldTime > 8500);
 bool sunset =   (worldTime < 8500 || worldTime > 12000);
 bool night =   (worldTime < 12000 || worldTime > 21000);
-
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 vec3 GetLightmapColor(in vec2 Lightmap){
 
     Lightmap = AdjustLightmap(Lightmap);
@@ -83,13 +83,16 @@ vec3 GetLightmapColor(in vec2 Lightmap){
      SkyLighting += vec3(0.3);
     }
 
+
+
+
 #endif
 
     vec3 LightmapLighting = TorchLighting + SkyLighting;
 
     return LightmapLighting;
 }
-
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef ShadowRendering
 float Visibility(in sampler2D ShadowMap, in vec3 SampleCoords) {
     return step(SampleCoords.z - 0.001f, texture2D(ShadowMap, SampleCoords.xy).r);
@@ -131,6 +134,7 @@ vec3 GetShadow(float depth) {
     return ShadowAccum;
 }
 #endif
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void main(){
 
     vec3 Albedo = pow(texture2D(colortex0, TexCoords).rgb, vec3(2.2f));
