@@ -1,4 +1,12 @@
 #version 120
+#define weather
+#ifdef weather
+uniform float viewHeight;
+uniform float viewWidth;
+#else
+uniform float viewHeight
+uniform float viewWidth
+#endif
 //--------------------------------------------------------------------------------------------
 varying vec4 texcoord;
 uniform sampler2D gcolor;
@@ -33,8 +41,6 @@ uniform int isEyeInWater;
 uniform mat4 gbufferModelView;
 uniform sampler2D lightmap;
 uniform sampler2D texture;
-uniform float viewWidth;
-uniform float viewHeight;
 varying vec2 lmcoord;
 //--------------------------------------------------------------------------------------------
 #define rainPower 0.2 //[0 1 2 3 4 5]

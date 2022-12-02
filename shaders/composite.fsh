@@ -1,5 +1,12 @@
 #version 120
-
+#define composite1
+#ifdef composite1
+uniform float viewHeight;
+uniform float viewWidth;
+#else
+uniform float viewHeight
+uniform float viewWidth
+#endif
 #include "/files/filters/distort.glsl"
 #include "/files/filters/distort2.glsl"
 #include "/files/filters/dither.glsl"
@@ -40,6 +47,8 @@ const float Ambient = 0.025f;
 
 #define shadowMapResolution 256
 #define SHADOW_SAMPLES 1
+
+#define LightingMultiplayer 1.25 //[1.0 1.25 1.50 1.75 2.0 2.50 3.0]
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /*
 const int colortex0Format = RGBA16F;
@@ -152,7 +161,7 @@ void main(){
 
 #ifdef ShadowRendering
     float NdotL = max(dot(Normal, normalize(shadowLightPosition)), 0.0f);
-    vec3 Diffuse = Albedo * (LightmapColor + GetShadow(Depth) + Ambient);
+    vec3 Diffuse = Albedo * (LightmapColor + GetShadow(Depth)*LightingMultiplayer + Ambient);
 #else
     vec3 Diffuse = Albedo * (LightmapColor + Ambient);
 #endif

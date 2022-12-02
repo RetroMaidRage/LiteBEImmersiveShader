@@ -1,4 +1,12 @@
 #version 120
+#define terrain
+#ifdef terrain
+uniform float viewHeight;
+uniform float viewWidth;
+#else
+uniform float viewHeight
+uniform float viewWidth
+#endif
 //----------------------------------------------------INCLUDE----------------------------------------------
 #include "/files/filters/noises.glsl"
 //----------------------------------------------------UNIFORMS----------------------------------------------
@@ -14,8 +22,6 @@ in  float BlockId;
 uniform sampler2D colortex0;
 uniform sampler2D colortex1;
 uniform float frameTimeCounter;
-uniform float viewWidth;
-uniform float viewHeight;
 varying vec3 vworldpos;
 varying vec3 SkyPos;
 uniform mat4 gbufferModelViewInverse;

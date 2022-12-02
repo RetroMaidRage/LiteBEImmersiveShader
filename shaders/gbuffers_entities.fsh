@@ -1,5 +1,12 @@
 #version 120
-
+#define entities
+#ifdef entities
+uniform float viewHeight;
+uniform float viewWidth;
+#else
+uniform float viewHeight
+uniform float viewWidth
+#endif
 uniform sampler2D lightmap;
 varying vec2 lmcoord;
 varying vec2 texcoord;
