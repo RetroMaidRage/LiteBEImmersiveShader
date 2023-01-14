@@ -18,7 +18,7 @@ uniform sampler2D depthtex1;
 uniform sampler2D composite;
 uniform vec3 sunPosition;
 uniform mat4 gbufferProjection;
-uniform int worldTime;
+uniform float worldTime;
 uniform float rainStrength;
 uniform float aspectRatio;
 uniform float near;
@@ -90,9 +90,12 @@ vec3 applyFog( in vec3  rgb, in float distance, in vec3  rayDir, in float coeff,
 vec3 applyFog2( in vec3  rgb,      // original color of the pixel
                in float distance, // camera to point distance
                in vec3  rayDir,   // camera to point vector
-               in vec3  sunDir, in float Fac )  // sun light direction
+               in vec3  sunDir,
+                in float Fac,
+                in float density )  // sun light direction
 {
-    float fogAmount = GroundFogDestiny*exp(-rayDir.y*0.07+Fac)*(1.0-exp(-distance*rayDir.y*0.07))/rayDir.y;
+
+    float fogAmount = density*exp(-rayDir.y*0.07+Fac)*(1.0-exp(-distance*rayDir.y*0.07))/rayDir.y;
     //fogAmount += Fac;
     float sunAmount = max( dot( rayDir, sunDir ), 0.0 );
     vec3  fogColor  = mix( vec3(0.5,0.6,0.7)+(vec3(0.5,0.6,1.7)*TimeMidnight), // bluish
@@ -102,7 +105,9 @@ vec3 applyFog2( in vec3  rgb,      // original color of the pixel
 }
 //----------------------------------------------------------------------------------------------
 void main() {
-
+  float depth = texture2D(depthtex0, texcoord.st).r;
+    vec3 depth2 = texture2D(depthtex0, texcoord.st).rgb;
+  bool isTerrain = depth < 1.0;
 vec3 colorDepth = texture2D(gcolor, texcoord.st).rgb;
 //----------------------------------------------------------------------------------------------
 	vec3 screenPos = vec3(texcoord.st, texture2D(depthtex0, texcoord.st).r);
@@ -112,10 +117,20 @@ vec3 colorDepth = texture2D(gcolor, texcoord.st).rgb;
 	vec4 world_position = gbufferModelViewInverse * vec4(viewPos, 1.0);
 	vec3 P_world = (gbufferModelViewInverse * vec4(viewPos,1.0)).xyz + cameraPosition;
   //----------------------------------------------------------------------------------------------
+	vec2 rainCoord = (P_world.xz/100000)+frameTimeCounter/10000;
+
+	float Noise = texture2D(noisetex, fract(rainCoord.xy*8)).x;
+	Noise += texture2D(noisetex, (rainCoord.xy*4)).x;
+	Noise += texture2D(noisetex, (rainCoord.xy*2)).x;
+	Noise += texture2D(noisetex, (rainCoord.xy/2)).x;
+
+	float Fac = max(Noise-2.0,0.0);
+//----------------------------------------------------------------------------------------------
 	vec3 L = mat3(gbufferModelViewInverse) * normalize(shadowLightPosition.xyz);
 //----------------------------------------------------------------------------------------------
-float distancefog = length(world_position.xyz);
+float distancefog = length(depth2)*exp(depth2.y);
 
+float distancefog2 = length(world_position.xyz);
 vec3 fog = vec3(0);
 vec3 rd = normalize(vec3(world_position.x,world_position.y,world_position.z));
 
@@ -129,22 +144,16 @@ vec3 color = texture2D(gcolor, texcoord.st).rgb;
 
 float motion = simplex3d_fractal(P_world/30+pow(frameTimeCounter, 0.3));
 
-#ifdef WaterFog
-    if (isEyeInWater == 1) {
-        color += applyFog(fog, distancefog,  rd, 0.005, L);
-    }
-#endif
-//----------------------------------------------------------------------------------------------
-#ifdef LavaFog
-    if (isEyeInWater == 2) {
-        color += applyFog(fog, distancefog,  rd, 0.005, L);
-    }
-#endif
+vec3 density = vec3(smoothstep(0, 500.0, max(GetDepthLinear(texcoord.st)  / far, 1.0)))*20000;
+vec3 density2 = vec3(smoothstep(0, 500.0, max(GetDepthLinear(texcoord.st)  / far, 1.0)))*20000;
 
 #ifdef Fog
-color += applyFog(fog, distancefog,  rd, FogDestiny, L)*5;
-color += applyFog2(fog, distancefog,  rd, L, motion);
+//color += applyFog(fog, distancefog,  rd, FogDestiny, L)*5;
 #endif
+
+
+color += applyFog2(fog, distancefog,  rd, L, motion, 10.5);
+
 //color += applyFogGroundOver(fog, distancefogOver, normalize(cameraPosition), rd-Fac, L);
 //----------------------------------------------------------------------------------------------
 /* DRAWBUFFERS:02 */

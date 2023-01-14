@@ -24,7 +24,7 @@ void main(){
     vec4 Albedo = texture2D(texture, texcoord) * Color;
 		vec4 color = texture2D(texture, texcoord) * glcolor;
 		color.rgb = mix(color.rgb, entityColor.rgb, entityColor.a);
-  /* DRAWBUFFERS:023 */
+  /* DRAWBUFFERS:012 */
 
 		gl_FragData[0] = color;
    gl_FragData[1] = vec4(Normal * 0.5f + 0.5f, 1.0f);

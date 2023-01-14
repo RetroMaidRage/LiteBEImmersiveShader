@@ -5,13 +5,12 @@
 #include "/files/tonemaps/tonemap_reinhard2.glsl"
 #include "/files/tonemaps/tonemap_lottes.glsl"
 
-
+uniform float viewHeight;
+uniform float viewWidth;
 varying vec2 TexCoords;
 uniform vec3 sunPosition;
 uniform mat4 gbufferProjection;
 uniform sampler2D colortex0;
-uniform float viewWidth;
-uniform float viewHeight;
 
 #define COLORCORRECT_RED 1 ///[0.01 0.02 0.03 0.04 0.05 0.06 0.07 0.08 0.09 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 1.1 1.2 1.3 1.4 1.5 1.6 1.7 1.8 1.9 2.0 3.0 ]
 #define COLORCORRECT_GREEN 1 ///[0.01 0.02 0.03 0.04 0.05 0.06 0.07 0.08 0.09 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 1.1 1.2 1.3 1.4 1.5 1.6 1.7 1.8 1.9 2.0 3.0 ]
@@ -25,6 +24,8 @@ uniform float viewHeight;
 #define CROSSPROCESS
 
 #define LensFlare
+
+#define VanillaColors
 
 #ifdef LensFlare
 vec3 lensflarer(vec2 uv,vec2 pos)
@@ -73,11 +74,12 @@ vec3 lensflarer(vec2 uv,vec2 pos)
 
 void main() {
    vec3 color = pow(texture2D(colortex0, TexCoords).rgb, vec3(1.0f / GammaSettings));
+	 vec3 color2 = pow(texture2D(colortex0, TexCoords).rgb, vec3(1.0f / GammaSettings));
 
    vec2 GetSreenRes = vec2(viewWidth, viewHeight);
 
-   vec2 uvv = gl_FragCoord.xy / GetSreenRes.xy - 0.5;
-   uvv.x *= GetSreenRes.x/GetSreenRes.y; //fix aspect ratio
+   vec2 uv = gl_FragCoord.xy / GetSreenRes.xy - 0.5;
+   uv.x *= GetSreenRes.x/GetSreenRes.y; //fix aspect ratio
 
    vec4 tpos = vec4(sunPosition,1.0)*gbufferProjection;
    tpos = vec4(tpos.xyz/tpos.w,1.0);
@@ -96,13 +98,23 @@ void main() {
     #endif
 
 
+vec4 bloom = vec4(0,0,0,0);
+		for (int i = 1; i < 2; i++){
+		        bloom += textureLod(colortex0, TexCoords, float(i)) / float(i);
 
-
+		    color.rgb += bloom.rgb * 0.02;
+				color2.rgb += bloom.rgb * 0.02;
+}
 #ifdef LensFlare
   if (sunPosition.z < 0){
-      color.rgb+=lensflarer(uvv,LightPos)/2;
+      //color.rgb+=lensflarer(uvv,LightPos)/2;
     }
 #endif
 
-   gl_FragColor = vec4(color, 1.0f);
+
+#ifdef VanillaColors
+   gl_FragColor = vec4(color2, 1.0f);
+#else
+ gl_FragColor = vec4(color, 1.0f);
+ #endif
 }

@@ -15,12 +15,9 @@ varying vec2 TexCoords;
 varying vec2 LightmapCoords;
 varying vec3 Normal;
 varying vec4 Color;
-varying vec3 shadowLightPosition;
 out float BlockId;
 varying vec3 SkyPos;
 uniform float rainStrength;
-flat out int BlockID;
-
 //--------------------------------------------DEFINE------------------------------------------
 #define waving_grass
 #define waving_leaves_speed 0.1 ///[0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 1.1 1.2 1.3 1.4 1.5 1.6 1.7 1.8 1.9 2.0 3.0 4.0 5.0 6.0 7.0 8.0 9.0 10 15 20]
@@ -33,7 +30,6 @@ float Time = max(frameTimeCounter, 1100);
 
 void main() {
 		SkyPos = (gl_ModelViewMatrix * gl_Vertex).xyz;
-			BlockID = int(mc_Entity.x);
 		BlockId = mc_Entity.x;
 texcoord = (gl_TextureMatrix[0] * gl_MultiTexCoord0).xy;
 lmcoord = (gl_TextureMatrix[1] * gl_MultiTexCoord1).xy;
@@ -43,7 +39,7 @@ lmcoord = (gl_TextureMatrix[1] * gl_MultiTexCoord1).xy;
 	viewPos = (gl_ModelViewMatrix * gl_Vertex).xyz;
 
   #ifdef waving_grass
-    if (mc_Entity.x == 2.0 || mc_Entity.x == 3.0 || mc_Entity.x == 4.0 || mc_Entity.x == 10015.0 ) {
+    if (mc_Entity.x == 10002.0 || mc_Entity.x == 10003.0 || mc_Entity.x == 10004.0 || mc_Entity.x == 10015.0 ) {
 
       float magnitude = sin((tick * pi / (28.0)) + vworldpos.x + vworldpos.z) * 0.055 * (1.0 + rainStrength);
     //   vpos.x += sin((tick * pi / (28.0 * waving_grass_speed)) + (vworldpos.x + -5.0) * 0.1 + (vworldpos.z + 10.0) * 0.1) * magnitude;
@@ -91,10 +87,6 @@ gl_Position = gl_ProjectionMatrix * vpos;
     TexCoords = gl_MultiTexCoord0.st;
     LightmapCoords = mat2(gl_TextureMatrix[1]) * gl_MultiTexCoord1.st;
     LightmapCoords = (LightmapCoords * 33.05f / 32.0f) - (1.05f / 32.0f);
-
     Normal = gl_NormalMatrix * gl_Normal;
-
-
-
     Color = gl_Color;
 }

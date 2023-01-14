@@ -1,7 +1,3 @@
-block.1=minecraft:water minecraft:flowing_water
-block.2 = grass large_fern fern tall_seagrass seagrass kelp tall_grass
-block.3 = tall_grass wheat
-block.4 = dandelion poppy cornflower oxeye_daisy
 block.10001= water  flowing_water
 block.10002 = grass large_fern fern tall_seagrass seagrass kelp
 block.10003 = tall_grass
@@ -12,7 +8,7 @@ block.10015 =  birch_leaves
 
 block.10008 = lily_pad
 
-block.10010 = grass_block dirt sand clay_block gravel
+ block.10010 = grass_block dirt sand clay_block gravel
 
 block.10011 = lantern
 

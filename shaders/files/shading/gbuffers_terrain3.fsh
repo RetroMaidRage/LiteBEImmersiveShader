@@ -1,4 +1,12 @@
 #version 120
+#define terrain
+#ifdef terrain
+uniform float viewHeight;
+uniform float viewWidth;
+#else
+uniform float viewHeight
+uniform float viewWidth
+#endif
 //----------------------------------------------------INCLUDE----------------------------------------------
 #include "/files/filters/noises.glsl"
 //----------------------------------------------------UNIFORMS----------------------------------------------
@@ -14,19 +22,13 @@ in  float BlockId;
 uniform sampler2D colortex0;
 uniform sampler2D colortex1;
 uniform float frameTimeCounter;
-uniform float viewWidth;
-uniform float viewHeight;
 varying vec3 vworldpos;
 varying vec3 SkyPos;
 uniform mat4 gbufferModelViewInverse;
 uniform vec3 shadowLightPosition;
 varying vec3 viewPos;
-varying vec3 upPosition;
 varying vec4 vpos;
 uniform int isEyeInWater;
-flat in int BlockID;
-uniform int worldTime;
-uniform sampler2D gaux4;
 //----------------------------------------------------DEF----------------------------------------------
 #define specularTerrainStrenght 2 ///[0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 1.1 1.2 1.3 1.4 1.5 1.6 1.7 1.8 1.9 2.0 3.0 4.0 5 6.0 7.0 8.0 9.0 10 15 20]
 #define FakeCaustic
@@ -36,7 +38,7 @@ uniform sampler2D gaux4;
 
 #define PuddleStrenght 0.85 ///[0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 1.1 1.2 1.3 1.4 1.5 1.6 1.7 1.8 1.9 2.0 3.0 4.0 5 6.0 7.0 8.0 9.0 10 15 20]
 
-//#define TerrainGradient
+#define TerrainGradient
 #define GradientStrenght 0.7 ///[0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 1.1 1.2 1.3 1.4 1.5 1.6 1.7 1.8 1.9 2.0 3.0 4.0 5 6.0 7.0 8.0 9.0 10 15 20]
 #define GradientTerrainStrenght 0.7 ///[0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 1.1 1.2 1.3 1.4 1.5 1.6 1.7 1.8 1.9 2.0 3.0 4.0 5 6.0 7.0 8.0 9.0 10 15 20]
 
@@ -197,7 +199,6 @@ float OtherFac;
 
 //-------------------------------------------TerrainGradient---------------------------------------------
 #ifdef TerrainGradient
-if (id == 10010.0){
  OtherFac = (1.0 - (pow(GradientTerrainStrenght,Fac))) / (1.0 + rainStrength);
 
 
@@ -209,7 +210,7 @@ cmix = mix(Albedo,GradientColor, OtherFac+0.05);
  if (rainStrength == 0) {
 Albedo = cmix;
 }
-}
+
 #endif
 
 //-------------------------------------------LeavesGradient---------------------------------------------
@@ -265,13 +266,9 @@ Albedo = puddle_color+(colorToAddWater*2);
 vec4 GradientColorR = texture2D(colortex0, texcoord.st);
 
 //--------------------------------------------------------------------------------------------------------
-vec3 dayColor = texture2D(gaux4, vec2(float(worldTime) / 24000.0, 0.5)).rgb*LightmapCoords.x;
-    /* DRAWBUFFERS:0126 */
-//    Albedo.rgb*= dayColor;
+
+    /* DRAWBUFFERS:012 */
     gl_FragData[0] = Albedo;
     gl_FragData[1] = vec4(Normal * 0.5f + 0.5f, 1.0f);
-    //      gl_FragData[1] = vec4(-Normal * 0.5f + 0.5f, 1.0f);
-    //    }
     gl_FragData[2] = vec4(LightmapCoords, 0.0f, 1.0f);
-    gl_FragData[3] = vec4(float(BlockID) / 255, 0, 0, 1); //writing the block data to a buffer
 }
