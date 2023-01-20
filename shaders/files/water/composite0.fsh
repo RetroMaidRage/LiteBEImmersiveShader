@@ -29,7 +29,7 @@ uniform sampler2D noisetex;
 uniform int worldTime;
 uniform sampler2D gaux4;
 uniform mat4 gbufferProjectionInverse;
-uniform mat4 gbufferModelViewInverse;
+uniform mat4 gbufferModelViewInverse
 uniform vec3 cameraPosition;
 uniform mat4 shadowModelView;
 uniform mat4 shadowProjection;
@@ -60,8 +60,6 @@ float Raining = clamp(wetness, 1.0, 100.0);
 #define SHADOW_SAMPLES 2 //[1 2 3 4]
 
 #define LightingMultiplayer 1.0 //[1.0 1.25 1.50 1.75 2.0 2.50 3.0]
-
-#define Clouds
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /*
 const int colortex0Format = RGBA32F;
@@ -91,7 +89,7 @@ vec3 GetLightmapColor(in vec2 Lightmap){
      vec3 TorchColor = vec3(1.0f, 0.25f, 0.08f);
 
     vec3 TorchLighting = Lightmap.x * TorchColor;
-    vec3 SkyLighting = Lightmap.y * skyColor+TimeMidnight*0.0;
+    vec3 SkyLighting = Lightmap.y * skyColor;
 //skyColor*TimeSunrise+vec3(1.52f,1.0f,1.0f)*TimeNoon+skyColor*TimeSunset+vec3(0)*TimeMidnight
 #ifdef ShadowLightmap
 #ifdef ShadowLightmapLightOrDark
@@ -181,41 +179,20 @@ void main(){
     vec3 screenPos = vec3(TexCoords, texture2D(depthtex0, TexCoords).r);
     vec3 clipPos = screenPos * 2.0 - 1.0;
     vec4 tmp = gbufferProjectionInverse * vec4(clipPos, 1.0);
-
     vec3 viewPos = tmp.xyz / tmp.w;
-    vec3 eyePlayerPos = mat3(gbufferModelViewInverse) * viewPos;
-    vec4 world_position = gbufferModelViewInverse * vec4(viewPos, 1.0);
     vec3 P_world = (gbufferModelViewInverse * vec4(viewPos,1.0)).xyz + cameraPosition;
+    float motion = simplex3d_fractal(P_world/30+pow(frameTimeCounter, 0.3));
 //----------------------------------------------------------------------------------
     float FogDistance = length(viewPos);
     float FogDistanceSetup = smoothstep(FogStart, FogEnd, FogDistance*FogDefaultDensity*Raining);
-
-    vec3 L = mat3(gbufferModelViewInverse) * normalize(sunPosition.xyz);
-
-
+    vec3 L = mat3(gbufferModelViewInverse) * normalize(shadowLightPosition.xyz);
+    vec4 world_position = gbufferModelViewInverse * vec4(viewPos, 1.0);
     vec3 rd = normalize(vec3(world_position.x,world_position.y,world_position.z));
     float sunAmount = max(dot(rd, L), 0.0);
-
-#ifdef Clouds
-    vec3 Cloud_Pos = vec3(1);
-    Cloud_Pos = world_position.xyz / world_position.y;
-    Cloud_Pos.y *= 8000.0;
-    Cloud_Pos.zx += frameTimeCounter/10;
-    float awan = 0;
-    awan += simplex3d_fractal(Cloud_Pos);
-
-#endif
-
 //----------------------------------------------------------------------------------
 
     if(Depth == 1.0f){
         gl_FragData[0] = vec4(Albedo, 1.0f);
-        #ifdef Clouds
-        if(Depth == 1.0 && sign(Cloud_Pos + cameraPosition.y) == sign(eyePlayerPos.y)) {
-            vec4 Cloud = vec4(Albedo, 1.0f);
-            Cloud = mix (Cloud, vec4(0.5,0.5,0.5,0.5), awan/1.7*TimeSunrise+awan/1.7*TimeNoon+awan/1.7*TimeSunset+awan/22.7*TimeMidnight);
-              gl_FragData[0] = Cloud;}
-        #endif
         return;
     }
 //=============================REALSHADOWS==================================================================
@@ -236,8 +213,7 @@ void main(){
     #endif
 //=============================FAKESHADOWS======================================================
 #else
-vec4 Cloud = vec4(Albedo, 1.0f);
-Cloud = mix (Cloud, vec4(0.5,0.5,0.5,0.5), awan/1.7*TimeSunrise+awan/1.7*TimeNoon+awan/1.7*TimeSunset+awan/22.7*TimeMidnight);
+
     vec3 LightmapCustomCol = vec3(1.0);
     #ifdef LightmapCustomColor
      LightmapCustomCol = vec3(1.52f,1.0f,1.0f)*vec3(1.52f,1.0f,1.0f)*TimeSunrise+vec3(1.52f,1.0f,1.0f)/2*TimeNoon+vec3(1.52f,1.0f,1.0f)*TimeSunset+vec3(0.1)*TimeMidnight;
@@ -247,7 +223,6 @@ Cloud = mix (Cloud, vec4(0.5,0.5,0.5,0.5), awan/1.7*TimeSunrise+awan/1.7*TimeNoo
 
     #ifdef Fog
     if(Depth < 1.0){
-    vec3 AdjustedFog = vec3(fogColor.r *TimeSunrise*1+TimeSunset*3+TimeNoon*1+TimeMidnight*10.5, fogColor.g,fogColor.b);
     Diffuse = mix(Diffuse,  mix(skyColor, fogColor, pow(sunAmount, 2.0)), FogDistanceSetup);
     }
     #endif

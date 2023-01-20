@@ -16,6 +16,7 @@ uniform vec3 sunPosition;
 uniform vec3 moonPosition;
 uniform vec3 shadowLightPosition;
 varying vec3 SkyPos;
+uniform int worldTime;
 
 varying vec4 starData; //rgb = star color, a = flag for weather or not this pixel is a star.
 //-------------------------------------------------------------------------------------
@@ -51,7 +52,7 @@ vec3 skyColorFinal = mix(skyColor, fogColor*1.2, fogify(max(upDot, horizon), 0.0
 void main() {
 	vec3 color;
 	if (starData.a > 0.5) {
-		color = starData.rgb;
+		color = starData.rgb*2;
 	}
 	else {
 		vec4 pos = vec4(gl_FragCoord.xy / vec2(viewWidth, viewHeight) * 2.0 - 1.0, 1.0, 1.0);

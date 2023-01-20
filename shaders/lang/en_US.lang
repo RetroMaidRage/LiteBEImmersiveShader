@@ -1,6 +1,6 @@
 screen.Misc=§cMisc
 screen.Credits=§fDeveloped §fby §6Retro§cMaid§bRage
-screen.ChromationAbberation=Chromation Abberation
+screen.Shadows_Lighting=Shadows and Lighting
 screen.AntiAliasing=AntiAliasing
 screen.Customization = Customization
 
@@ -10,5 +10,3 @@ profile.RenderingLow= §6Rendering §eLow
 profile.RenderingHigh = §6Rendering §aHigh
 //§4C§cu§cs§et§6o§2m§2i§az§ba§3t§1i§9o§5n
 option.UseTechFog = UseTechFog(composite7)
-
-SUNRAYS SUNRAYS_TYPE SR_Color_Type SUNRAYS_DECAY SUNRAYS_LENGHT SUNRAYS_BRIGHTNESS SUNRAYS_SAMPLES SUNRAYS_COLOR_RED SUNRAYS_DITHER

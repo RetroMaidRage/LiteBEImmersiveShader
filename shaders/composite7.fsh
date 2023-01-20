@@ -1,9 +1,5 @@
 #version 120
-/*
-const int colortex0Format = RGBA16F;
-const int colortex1Format = RGB16;
-const int colortex2Format = RGB16;
-*/
+
 //--------------------------------------------UNIFORMS------------------------------------------
 #include "/files/filters/noises.glsl"
 //#define UseTechFog
@@ -49,6 +45,13 @@ varying vec2 TexCoords;
 #define GroundFogDestiny 0.015  ///[0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 1.1 1.2 1.3 1.4 1.5 1.6 1.7 1.8 1.9 2.0 3.0 4.0 5 6.0 7.0 8.0 9.0 10 15 20]
 #define WaterFog
 #define LavaFog
+/*
+const int colortex0Format = RGBA16F;
+const int colortex1Format = RGB16;
+const int colortex2Format = RGB16;
+const int colortex8Format = RGBA32F;
+const int colortex7Format = RGBA32F;
+*/
 //-----------------------------------------------------------------------------------------------
 float timefract = worldTime;
 float TimeSunrise  = ((clamp(timefract, 23000.0, 24000.0) - 23000.0) / 1000.0) + (1.0 - (clamp(timefract, 0.0, 4000.0)/4000.0));
@@ -56,26 +59,16 @@ float TimeNoon     = ((clamp(timefract, 0.0, 4000.0)) / 4000.0) - ((clamp(timefr
 float TimeSunset   = ((clamp(timefract, 8000.0, 12000.0) - 8000.0) / 4000.0) - ((clamp(timefract, 12000.0, 12750.0) - 12000.0) / 750.0);
 float TimeMidnight = ((clamp(timefract, 12000.0, 12750.0) - 12000.0) / 750.0) - ((clamp(timefract, 23000.0, 24000.0) - 23000.0) / 1000.0);
 
-vec3 sunsetFogColWorld = vec3(1.0,0.9,0.7); //2
-vec3 nightFogColWorld = vec3(0.5,0.6,1.7); //2
-
+vec3 sunsetFogColWorld = vec3(1.0,0.9,0.7);
+vec3 nightFogColWorld = vec3(0.5,0.6,1.7);
 
 vec3 sunsetFogColSun = vec3(0.5,0.6,1.7)+skyColor;
 vec3 nightFogColSun = vec3(0.5,0.6,1.7)+skyColor;
 
-
-vec3 WaterFogColor = vec3(0.2, 0.3, 0.5);
-vec3 LavaFogColor = vec3(0.8, 0.66, 0.5);
-
 vec3 customFogColorSun = (sunsetFogColSun*TimeSunrise + skyColor*TimeNoon + sunsetFogColSun*TimeSunset + nightFogColSun*TimeMidnight);
 vec3 customFogColorWorld = (sunsetFogColWorld*TimeSunrise + skyColor*TimeNoon + sunsetFogColWorld*TimeSunset + nightFogColWorld*TimeMidnight);
-
-
-
 //-----------------------------------------------------------------------------------------------
-float     GetDepthLinear(in vec2 coord) {
-   return 2.0f * near * far / (far + near - (2.0f * texture2D(depthtex0, coord).x - 1.0f) * (far - near));
-}
+
 //-----------------------------------------------------------------------------------------------
 vec3 applyFog( in vec3  rgb, in float distance, in vec3  rayDir, in float coeff, in vec3  sunDir ) {
 
@@ -85,7 +78,7 @@ vec3 applyFog( in vec3  rgb, in float distance, in vec3  rayDir, in float coeff,
     return mix( rgb, fogColor, fogAmount );
 
 }
-
+//-----------------------------------------------------------------------------------------------
 
 vec3 applyFog2( in vec3  rgb,      // original color of the pixel
                in float distance, // camera to point distance
@@ -103,7 +96,7 @@ vec3 applyFog2( in vec3  rgb,      // original color of the pixel
 //----------------------------------------------------------------------------------------------
 void main() {
 
-vec3 colorDepth = texture2D(gcolor, texcoord.st).rgb;
+
 //----------------------------------------------------------------------------------------------
 	vec3 screenPos = vec3(texcoord.st, texture2D(depthtex0, texcoord.st).r);
 	vec3 clipPos = screenPos * 2.0 - 1.0;
@@ -121,7 +114,7 @@ vec3 rd = normalize(vec3(world_position.x,world_position.y,world_position.z));
 
 float Depth = texture2D(depthtex0, TexCoords).r;
 if(Depth == 1.0f){
-		gl_FragData[0] = vec4(colorDepth, 1.0f);
+		gl_FragData[0] =  texture2D(gcolor, texcoord.st);
 		return;
 }
 //----------------------------------------------------------------------------------------------
@@ -147,6 +140,6 @@ color += applyFog2(fog, distancefog,  rd, L, motion);
 #endif
 //color += applyFogGroundOver(fog, distancefogOver, normalize(cameraPosition), rd-Fac, L);
 //----------------------------------------------------------------------------------------------
-/* DRAWBUFFERS:02 */
+/* DRAWBUFFERS:0 */
 	gl_FragData[0] = vec4(color.rgb, 1.0);
 }

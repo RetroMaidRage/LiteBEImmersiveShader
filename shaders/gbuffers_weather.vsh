@@ -14,11 +14,11 @@ void main() {
 	float tick = frameTimeCounter;
 
 		vec4 position = gl_Vertex;
-	//	position.y += tick;
+
 	#ifdef waves
 			float speed = 0.1;
 
-				position.x += sin((tick * pi / (28.0 * speed)) + (position.x + 0.0) * 0.1 + (position.z + waves_rain_strenght) * 0.1);
+				position.x += sin((frameTimeCounter * pi / (28.0 * speed)) + (position.x + 0.0) * 0.1 + (position.z + waves_rain_strenght) * 0.1);
 						position.z += 1.0;
 						#endif
 gl_Position = gl_ProjectionMatrix * (gl_ModelViewMatrix * position);
