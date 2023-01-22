@@ -1,19 +1,13 @@
 #version 120
-#define skybasic
-#ifdef skybasic
+
 uniform float viewHeight;
 uniform float viewWidth;
-#else
-uniform float viewHeight
-uniform float viewWidth
-#endif
 uniform mat4 gbufferModelView;
 uniform mat4 gbufferProjectionInverse;
 uniform vec3 fogColor;
 uniform vec3 skyColor;
 uniform vec3 upPosition;
 uniform vec3 sunPosition;
-uniform vec3 moonPosition;
 uniform vec3 shadowLightPosition;
 varying vec3 SkyPos;
 uniform int worldTime;
@@ -23,9 +17,6 @@ varying vec4 starData; //rgb = star color, a = flag for weather or not this pixe
 vec3 viewVec = normalize(SkyPos);
 vec3 horizonVec = normalize(upPosition+viewVec);
 vec3 SunVector = normalize(sunPosition+viewVec);
-vec3 SunNormalise = normalize(sunPosition);
-vec3 MoonVector = normalize(moonPosition+viewVec);
-vec3 LightVector = normalize(moonPosition+viewVec);
 float VectorSky = dot(shadowLightPosition, viewVec);
 float horizon = dot(horizonVec, viewVec);
 //-------------------------------------------------------------------------------------
@@ -34,10 +25,6 @@ float fogify(float x, float w) {
 }
 vec3 mie(float dist, vec3 sunL){
 return max(exp(-pow(dist, 0.55)) * sunL - 0.2, 0.0);
-}
-
-float Rayleigh(float costh){
-return 3.0 / (16.0 * 3.14 ) * (1.0 + costh * costh);
 }
 
 vec3 calcSkyColor(vec3 pos) {
@@ -65,9 +52,6 @@ void main() {
     float cosTheta = dot(viewVec, normalize(sunPosition));
 		vec3 mieScatter = mie(sunDistance, vec3(0.25));
 		color+=mieScatter;
-
-		float p = Rayleigh(cosTheta);
-	//	color += p;
 
 	}
 

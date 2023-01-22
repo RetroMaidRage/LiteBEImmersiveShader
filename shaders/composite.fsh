@@ -27,8 +27,10 @@ uniform sampler2D shadowtex1;
 uniform sampler2D shadowcolor0;
 uniform sampler2D noisetex;
 uniform int worldTime;
+uniform sampler2D gaux1;
 uniform sampler2D gaux4;
 uniform mat4 gbufferProjectionInverse;
+uniform mat4 gbufferProjection;
 uniform mat4 gbufferModelViewInverse;
 uniform vec3 cameraPosition;
 uniform mat4 shadowModelView;
@@ -46,6 +48,8 @@ const float Ambient = 0.025f;
 
 float Raining = clamp(wetness, 1.0, 100.0);
 
+#define SSR
+
 #define Fog
 #define FogDefaultDensity 0.75  ///[0.01 0.02 0.03 0.04 0.05 0.06 0.07 0.08 0.09 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 1.1 1.2 1.3 1.4 1.5 1.6 1.7 1.8 1.9 2.0 3.0 ]
 #define FogStart 70 //[0 1 5 10 15 20 25 30 25 40 45 50 60 70 80 90 100 150 200 250 300 400 500 600 700 800 900 1000]
@@ -62,6 +66,14 @@ float Raining = clamp(wetness, 1.0, 100.0);
 #define LightingMultiplayer 1.0 //[1.0 1.25 1.50 1.75 2.0 2.50 3.0]
 
 #define Clouds
+
+#ifdef SSR
+const float stp = 1.2;			//size of one step for raytracing algorithm
+const float ref = 0.1;			//refinement multiplier
+const float inc = 2.2;			//increasement factor at each step
+const int maxf = 4;				//number of refinements
+float Id =  texture2D(colortex6, TexCoords).r * 255;
+#endif
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /*
 const int colortex0Format = RGBA32F;
@@ -78,12 +90,22 @@ float TimeSunrise  = ((clamp(timefract, 23000.0, 24000.0) - 23000.0) / 1000.0) +
 float TimeNoon     = ((clamp(timefract, 0.0, 4000.0)) / 4000.0) - ((clamp(timefract, 8000.0, 12000.0) - 8000.0) / 4000.0);
 float TimeSunset   = ((clamp(timefract, 8000.0, 12000.0) - 8000.0) / 4000.0) - ((clamp(timefract, 12000.0, 12750.0) - 12000.0) / 750.0);
 float TimeMidnight = ((clamp(timefract, 12000.0, 12750.0) - 12000.0) / 750.0) - ((clamp(timefract, 23000.0, 24000.0) - 23000.0) / 1000.0);
-
-bool sunrise =   (worldTime < 22000 || worldTime > 500);
-bool day =   (worldTime < 1000 || worldTime > 8500);
-bool sunset =   (worldTime < 8500 || worldTime > 12000);
-bool night =   (worldTime < 12000 || worldTime > 21000);
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef SSR
+vec3 nvec3(vec4 pos){
+    return pos.xyz/pos.w;
+}
+//-----------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------
+vec4 nvec4(vec3 pos){
+    return vec4(pos.xyz, 1.0);
+}
+//-----------------------------------------------------------------------------------------
+float cdist(vec2 coord) {
+	return max(abs(coord.s-0.5),abs(coord.t-0.5))*2.0;
+}
+#endif
+//-----------------------------------------------------------------------------------------
 vec3 GetLightmapColor(in vec2 Lightmap){
 
     Lightmap = AdjustLightmap(Lightmap);
@@ -129,7 +151,7 @@ SkyLighting+= vec3(0.55);
 float Visibility(in sampler2D ShadowMap, in vec3 SampleCoords) {
     return step(SampleCoords.z - 0.001f, texture2D(ShadowMap, SampleCoords.xy).r);
 }
-
+//-----------------------------------------------------------------------------------------
 vec3 TransparentShadow(in vec3 SampleCoords){
     float ShadowVisibility0 = Visibility(shadowtex0, SampleCoords);
     float ShadowVisibility1 = Visibility(shadowtex1, SampleCoords);
@@ -139,7 +161,7 @@ vec3 TransparentShadow(in vec3 SampleCoords){
     return mix(TransmittedColor * ShadowVisibility1, vec3(1.52f,1.0f,1.0f)*vec3(1.52f,1.0f,1.0f)*TimeSunrise+vec3(1.52f,1.0f,1.0f)/2*TimeNoon+vec3(1.52f,1.0f,1.0f)*TimeSunset+vec3(0.1)*TimeMidnight, ShadowVisibility0);
 }
 
-
+//-----------------------------------------------------------------------------------------
 const int ShadowSamplesPerSize = 2 * SHADOW_SAMPLES + 1;
 const int TotalSamples = ShadowSamplesPerSize * ShadowSamplesPerSize;
 
@@ -167,9 +189,62 @@ vec3 GetShadow(float depth) {
     return ShadowAccum;
 }
 #endif
+//----------------------------------------------------------------------------------------
+#ifdef SSR
+vec4 raytrace(vec3 viewdir, vec3 normal){
+
+  //http://www.minecraftforum.net/forums/mapping-and-modding/minecraft-mods/2381727-shader-pack-datlax-onlywater-only-water
+    vec4 color = vec4(0.0);
+
+
+    vec3 rvector = normalize(reflect(normalize(viewdir), normalize(normal)));
+    vec3 vector = stp * rvector;
+    vec3 oldpos = viewdir;
+    viewdir += vector;
+    int sr = 0;
+
+    for(int i = 0; i < 40; i++){
+    vec3 pos = nvec3(gbufferProjection * nvec4(viewdir)) * 0.5 + 0.5;
+
+        if(pos.x < 0 || pos.x > 1 || pos.y < 0 || pos.y > 1 || pos.z < 0 || pos.z > 1.0) break;
+
+        vec3 spos = vec3(pos.st, texture2D(depthtex0, pos.st).r);
+        spos = nvec3(gbufferProjectionInverse * nvec4(spos * 2.0 - 1.0));
+	    	float err = abs(viewdir.z-spos.z);
+
+		if(err < pow(length(vector)*1.85,1.15) && texture2D(gaux1,pos.st).g < 0.01)
+    {      sr++;   if(sr >= maxf){
+
+  float border = clamp(1.0 - pow(cdist(pos.st), 1.0), 0.0, 1.0);
+  color = texture2D(colortex0, pos.st);
+					float land = texture2D(gaux1, pos.st).g;
+					land = float(land < 0.03);
+					spos.z = mix(viewdir.z,2000.0*(0.4+1.0*0.6),land);
+					color.a = 1.0;
+                    color.a *= border;
+                    break;
+                }
+                viewdir = oldpos;
+                vector *=ref;
+        }
+        vector *= inc;
+        oldpos = viewdir;
+        viewdir += vector;
+    }
+    return color;
+
+}
+#endif
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void main(){
 //----------------------------------------------------------------------------------
+#ifdef SSR
+vec3 ClipSpace = vec3(TexCoords, texture2D(depthtex0, TexCoords).x) * 2.0f - 1.0f;
+vec4 ClipSpaceToViewSpace = gbufferProjectionInverse * vec4(ClipSpace, 1.0f);
+vec3 ViewSpace = ClipSpaceToViewSpace.xyz / ClipSpaceToViewSpace.w;
+vec3 ViewDirect = normalize(ViewSpace);
+#endif
+//-----------------------------------------------------------------------------------------
     vec3 Albedo = pow(texture2D(colortex0, TexCoords).rgb, vec3(2.2f));
     vec3 Normal = normalize(texture2D(colortex1, TexCoords).rgb * 2.0f - 1.0f);
 //----------------------------------------------------------------------------------
@@ -192,17 +267,16 @@ void main(){
 
     vec3 L = mat3(gbufferModelViewInverse) * normalize(sunPosition.xyz);
 
-
     vec3 rd = normalize(vec3(world_position.x,world_position.y,world_position.z));
     float sunAmount = max(dot(rd, L), 0.0);
-
+//-----------------------------------------------------------------------------------------
 #ifdef Clouds
     vec3 Cloud_Pos = vec3(1);
     Cloud_Pos = world_position.xyz / world_position.y;
     Cloud_Pos.y *= 8000.0;
     Cloud_Pos.zx += frameTimeCounter/10;
     float awan = 0;
-    awan += simplex3d_fractal(Cloud_Pos);
+    awan += simplex3d_fractal(Cloud_Pos)*clamp(1.0 - rainStrength,0.1,1.0);
 
 #endif
 
@@ -213,8 +287,9 @@ void main(){
         #ifdef Clouds
         if(Depth == 1.0 && sign(Cloud_Pos + cameraPosition.y) == sign(eyePlayerPos.y)) {
             vec4 Cloud = vec4(Albedo, 1.0f);
-            Cloud = mix (Cloud, vec4(0.5,0.5,0.5,0.5), awan/1.7*TimeSunrise+awan/1.7*TimeNoon+awan/1.7*TimeSunset+awan/22.7*TimeMidnight);
-              gl_FragData[0] = Cloud;}
+            Cloud = mix (Cloud, vec4(0.5,0.5,0.5,0.5), awan/1.7*TimeSunrise+awan/1.7*TimeNoon+awan/1.7*TimeSunset+awan/22.7*TimeMidnight);;
+              gl_FragData[0] = Cloud;
+            }
         #endif
         return;
     }
@@ -253,6 +328,18 @@ Cloud = mix (Cloud, vec4(0.5,0.5,0.5,0.5), awan/1.7*TimeSunrise+awan/1.7*TimeNoo
     #endif
 
 #endif
+//-----------------------------------------------------------------------------------------
+
+vec4 reflection;
+vec4 reflection2 = vec4(1.0);
+#ifdef SSR
+if(Id == 1.0){
+reflection = raytrace(ViewDirect, Normal)*1.5;
+ reflection2.rgb = mix(texture2D(colortex0, TexCoords).rgb, reflection.rgb, 1*reflection.a * (vec3(1.0) - texture2D(colortex0, TexCoords).rgb));
+}else{
+  reflection2.rgba = vec4(1);
+}
+#endif
 //===============================================================================================
-    gl_FragData[0] = vec4(Diffuse, 1.0f);
+    gl_FragData[0] = vec4(Diffuse, 1.0f)*reflection2;
 }

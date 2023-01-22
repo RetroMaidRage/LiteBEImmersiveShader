@@ -1,12 +1,5 @@
 #version 120
-#define weather
-#ifdef weather
-uniform float viewHeight;
-uniform float viewWidth;
-#else
-uniform float viewHeight
-uniform float viewWidth
-#endif
+
 //--------------------------------------------------------------------------------------------
 varying vec4 texcoord;
 uniform float wetness;

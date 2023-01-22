@@ -231,3 +231,28 @@ void main(){
 //===============================================================================================
     gl_FragData[0] = vec4(Diffuse, 1.0f);
 }
+
+float NdotL = normalMat.x;
+float diffuseSun = clamp(NdotL,0.0f,1.0f);
+vec3 direct = lightCol.rgb;
+
+
+//compute shadows only if not backface
+if (diffuseSun > 0.001) {
+
+  mat2 time = mat2(vec2(
+  				((clamp(timefract, 23000.0f, 25000.0f) - 23000.0f) / 1000.0f) + (1.0f - (clamp(timefract, 0.0f, 2000.0f)/2000.0f)),
+  				((clamp(timefract, 0.0f, 2000.0f)) / 2000.0f) - ((clamp(timefract, 9000.0f, 12000.0f) - 9000.0f) / 3000.0f)),
+
+  				vec2(
+
+  				((clamp(timefract, 9000.0f, 12000.0f) - 9000.0f) / 3000.0f) - ((clamp(timefract, 12000.0f, 12750.0f) - 12000.0f) / 750.0f),
+  				((clamp(timefract, 12000.0f, 12750.0f) - 12000.0f) / 750.0f) - ((clamp(timefract, 23000.0f, 24000.0f) - 23000.0f) / 1000.0f))
+  );	//time[0].xy = sunrise and noon. time[1].xy = sunset and mindight.
+
+  float transition_fading = 1.0-(
+      clamp(0.00333333*timefract - 40.,0.0,1.0)-
+      clamp(0.00333333*timefract - 43.3333,0.0,1.0)+
+      clamp(0.005*timefract - 110.,0.0,1.0)-
+      clamp(0.005*timefract - 117.,0.0,1.0)
+  );

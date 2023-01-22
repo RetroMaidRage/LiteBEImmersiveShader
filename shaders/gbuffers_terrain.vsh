@@ -2,7 +2,6 @@
 //#include "/files/filters/noises.glsl"
 //--------------------------------------------UNIFORMS------------------------------------------
 attribute vec4 mc_Entity;
-attribute vec2 mc_midTexCoord;
 out vec3 vworldpos;
 uniform float frameTimeCounter;
 varying vec2 lmcoord;
@@ -16,7 +15,7 @@ varying vec2 LightmapCoords;
 varying vec3 Normal;
 varying vec4 Color;
 varying vec3 shadowLightPosition;
-out float BlockId;
+//out float BlockId;
 varying vec3 SkyPos;
 uniform float rainStrength;
 flat out int BlockID;
@@ -33,10 +32,11 @@ float Time = max(frameTimeCounter, 1100);
 
 void main() {
 		SkyPos = (gl_ModelViewMatrix * gl_Vertex).xyz;
-			BlockID = int(mc_Entity.x);
-		BlockId = mc_Entity.x;
-texcoord = (gl_TextureMatrix[0] * gl_MultiTexCoord0).xy;
-lmcoord = (gl_TextureMatrix[1] * gl_MultiTexCoord1).xy;
+		BlockID = int(mc_Entity.x);
+		//BlockId = mc_Entity.x;
+    texcoord = (gl_TextureMatrix[0] * gl_MultiTexCoord0).xy;
+    lmcoord = (gl_TextureMatrix[1] * gl_MultiTexCoord1).xy;
+
 	vec4 position = gl_ModelViewMatrix * gl_Vertex;
   vec4 vpos = gbufferModelViewInverse*position;
   vworldpos = vpos.xyz + cameraPosition;
@@ -65,7 +65,7 @@ lmcoord = (gl_TextureMatrix[1] * gl_MultiTexCoord1).xy;
             vpos.y += sin((tick * pi / (28.0 * waving_leaves_speed)) + (vworldpos.x + 0.0) * 0.1 + (vworldpos.z + 0.0) * 0.1) * magnitude;
     }
 
-		    if (mc_Entity.x == 10008.0) {
+		    if (mc_Entity.x == 10008.0 || mc_Entity.x == 1.0 ) {
 					float fy = fract(vworldpos.y + 0.001);
 
 						if (fy > 0.002) {
@@ -73,7 +73,13 @@ lmcoord = (gl_TextureMatrix[1] * gl_MultiTexCoord1).xy;
 						float wave = 0.085 * sin(2 * pi * (tick*0.75 + vworldpos.x /  7.0 + vworldpos.z / 13.0))
 												 + 0.085 * sin(1 * pi * (tick*0.6 + vworldpos.x / 11.0 + vworldpos.z /  5.0));
 												 displacement = clamp(wave, -fy, 1.0-fy);
+												 if(mc_Entity.x == 1.0){
+																vpos.y += displacement/6;
+																}else
+											   {
 												 vpos.y += displacement;
+											   }
+
 											 }}
   #endif
 

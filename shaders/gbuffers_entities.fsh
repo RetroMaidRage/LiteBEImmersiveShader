@@ -1,14 +1,5 @@
 #version 120
-#define entities
-#ifdef entities
-uniform float viewHeight;
-uniform float viewWidth;
-#else
-uniform float viewHeight
-uniform float viewWidth
-#endif
-uniform sampler2D lightmap;
-varying vec2 lmcoord;
+
 varying vec2 texcoord;
 varying vec4 glcolor;
 varying vec2 TexCoords;
@@ -21,12 +12,17 @@ uniform sampler2D texture;
 
 void main(){
 
-    vec4 Albedo = texture2D(texture, texcoord) * Color;
-		vec4 color = texture2D(texture, texcoord) * glcolor;
-		color.rgb = mix(color.rgb, entityColor.rgb, entityColor.a);
-  /* DRAWBUFFERS:012 */
- 
-		gl_FragData[0] = color;
+  vec4 albedo  = texture2D(texture, texcoord) * glcolor;
+
+  // render thunder
+  if(entID == 1.0){
+     albedo.a = 0.15;
+  }
+
+
+  // render entity color changes (e.g taking damage)
+  albedo.rgb = mix(albedo.rgb, entityColor.rgb, entityColor.a);
+		gl_FragData[0] = albedo;
    gl_FragData[1] = vec4(Normal * 0.5f + 0.5f, 1.0f);
    gl_FragData[2] = vec4(LightmapCoords, 0.0f, 1.0f);
 }
