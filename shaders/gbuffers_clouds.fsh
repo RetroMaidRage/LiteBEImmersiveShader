@@ -13,9 +13,10 @@ vec4 color = texture2D(texture, texcoord.st) *glcolor;
 
 //--------------------------------------------------------------------------------------------
 
-/* DRAWBUFFERS:0 */
+/* DRAWBUFFERS:07 */
 
 	gl_FragData[0] = color; //gcolor
+		gl_FragData[1] = vec4(10.0f); //gcolor
 
 
 }

@@ -107,12 +107,15 @@ vec4 Albedo = texture2D(texture, TexCoords) * Color;
 //----------------------------------------SPECULAR--------------------------------------------------------
 if (id == 10008.0 || id == 1) {
 
+if(id == 1){
 
+}
 #ifdef WaterSpecularTech
 Albedo += (SpecularAngle*Albedo)*0.25;
 Albedo += (SpecularAngle2*Albedo)*1.0;
 #else
-Albedo += (SpecularAngle*Albedo)*0.8;
+//Albedo += (SpecularAngle*Albedo)*0.8;
+
 #endif
 if (id == 10008.0){
   Albedo += (SpecularAngle*Albedo)*1;
