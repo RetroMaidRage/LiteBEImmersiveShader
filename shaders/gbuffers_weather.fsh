@@ -27,5 +27,3 @@ color.b = 1.0;
 	gl_FragData[0] = color; //gcolor
 	#endif
 }
-
-//СДЕЛАТЬ НВОЫЙ ДОЖДЬ

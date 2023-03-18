@@ -311,6 +311,7 @@ float getRainPuddles(vec3 worldpos, vec3 Normal){
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void main(){
+  vec2 UsrrTexcoord = TexCoords;
 //----------------------------------------------------------------------------------
 #ifdef SSR
 vec3 ClipSpace = vec3(TexCoords, texture2D(depthtex0, TexCoords).x) * 2.0f - 1.0f;
@@ -412,7 +413,7 @@ FogDistanceSetup = smoothstep(FogStart, FogEnd, FogDistance*FogDefaultDensity*Ra
     vec3 CreateFog = mix(Albedo,  mix(skyColor, fogColor, pow(sunAmount, 2.0)), FogDistanceSetup);
 //-----------------------------------------------------------------------------------------
     if(Id == 1.0){
-
+       Diffuse *= texture2D(colortex0, TexCoords+0.01).rgb;
           #ifdef WaterFog
        Diffuse += mix(vec3(0), vec3(0.25), FogDistance*WaterFogDensity);
 

@@ -1,6 +1,6 @@
 #version 120
 //----------------------------------------------------INCLUDE----------------------------------------------
-#define WaterSpecularTech
+//#define WaterSpecularTech
 #ifdef WaterSpecularTech
 #include "/files/water/water_height.glsl"
 #endif
@@ -94,7 +94,7 @@ void main(){
 
       vec3 newnormal = normalize(vec3(xDelta,yDelta,1.0-xDelta*xDelta-yDelta*yDelta));
 //  float SpecularAngle = pow(max(dot(halfDir, newnormal), 0.0), 2);
-    float SpecularAngle = pow(max(dot(halfDir, newnormal*Normal), 0.0), 1);
+    float SpecularAngle = pow(max(dot(halfDir, newnormal), 0.0), 1);
     float SpecularAngle2 = pow(max(dot(halfDir, newnormal*Normal), 0.0), 50);
 #else
     float SpecularAngle = pow(max(dot(halfDir, Normal), 0.0), 50);
@@ -108,7 +108,7 @@ vec4 Albedo = texture2D(texture, TexCoords) * Color;
 if (id == 10008.0 || id == 1) {
 
 if(id == 1){
-
+ //Albedo += SpecularAngle/5;
 }
 #ifdef WaterSpecularTech
 Albedo += (SpecularAngle*Albedo)*0.25;
